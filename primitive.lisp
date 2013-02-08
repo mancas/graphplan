@@ -9,7 +9,7 @@
 (defun attach-type (typ contents)
   (cons typ contents))
 
-;; selectors
+;; selectors =)
 
 (defun typ (object)
   (car object))
