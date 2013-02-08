@@ -91,3 +91,22 @@
 (defun pred? (p)
   (equal (typ p)
 	 'predicate))
+
+
+
+;;; -----------------------------------------------------------------
+;;;	SECOND ABSTRACTION LAYER
+;;;
+
+(defun conj (obj-list)
+  (attach-type 'conjuncion
+	       obj-list))
+
+; nth-conj
+;	returns the 'nth' element of a given conjunction.
+;
+;(defun nth-conj (conj n)
+;  (if (= n 0) 
+;    (nth n conj)
+;    (car 
+;      (nth n conj))))
