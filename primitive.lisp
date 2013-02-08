@@ -18,6 +18,9 @@
   (cdr object))
 
 ;; -----------------------------------------------
+;; -----------------------------------------------
+;;;	FIRST ABSTRACTION LAYER
+
 
 ;; -LITERAL-
 
@@ -47,16 +50,6 @@
   (cdr (contents l)))
 
 ;; functions over literals
-
-; toggle-lit
-;	changes the value of some literal to the opposite value.
-
-(defun toggle-value (element)
-  (cond
-    ((lit? element) (make-lit (name-lit element) (not (val-lit element))))
-    ((pred? element)(make-pred (name-pred element) (objs-pred element) (not (val-pred element))))
-    )
-  )
 
 ;lit?
 ;	checks if the object is a literal.
@@ -92,21 +85,42 @@
   (equal (typ p)
 	 'predicate))
 
+;; -------------------------------------------------------
 
+;; CONJUNCTION
 
-;;; -----------------------------------------------------------------
-;;;	SECOND ABSTRACTION LAYER
-;;;
+;; constructor
 
 (defun conj (obj-list)
   (attach-type 'conjuncion
 	       obj-list))
 
+
+;; functions over conjunctions
+
 ; nth-conj
 ;	returns the 'nth' element of a given conjunction.
-;
-;(defun nth-conj (conj n)
-;  (if (= n 0) 
-;    (nth n conj)
-;    (car 
-;      (nth n conj))))
+
+(defun nth-conj (conj n)
+  (if (= n 0) 
+    (nth n conj)
+    (car 
+      (nth n conj))))
+
+;; -------------------------------------------------------
+
+;; NOT (predicates and literals)
+
+(defun not-obj (obj)
+  (cond
+    ((lit? obj) (make-lit (name-lit obj) (not (val-lit obj))))
+    ((pred? obj)(make-pred (name-pred obj) (objs-pred obj) (not (val-pred obj))))
+    )
+  )
+
+;; -----------------------------------------------
+;; -----------------------------------------------
+;;;	SECOND ABSTRACTION LAYER
+
+;; TODO: define state, action
+
