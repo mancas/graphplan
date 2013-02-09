@@ -155,7 +155,7 @@
 ;; constructor
 
 (defun make-action (preconditions effects)
-  (attach-type 'precondition
+  (attach-type 'action
 	       `(,(conj preconditions) ,(conj effects)))
  )
 
