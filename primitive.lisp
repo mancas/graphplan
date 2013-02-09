@@ -161,24 +161,15 @@
 
 ;; selectors
 
-;Get preconditions
+; Get preconditions
 
-(defun get-pres (action)
+(defun pres (action)
   (cdr (nth 1 action))
   )
 
-;Get effects
+; Get effects
 
-(defun get-effs (action)
+(defun effs (action)
   (cdr (nth 2 action))
  )
 
- ;; definition of State
- (defun state (name objs)
-   (attach-type 'state `(,name ,(conj objs)))
-   )
-
-;; Get literales
-(defun get-literales (state)
-  (cdr (nth 2 state))
-  )
