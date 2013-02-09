@@ -123,17 +123,54 @@
 ;;;	SECOND ABSTRACTION LAYER
 
 ;; TODO: define state, action
-(defun action (preconditions effects)
+
+;; STATE
+
+;; constructor
+
+;	returns a 'state' for a given list of conjunctions.
+
+(defun make-state (name conj)
+  (attach-type 'state
+	       (cons name
+		     (contents conj))))
+
+;; selectors
+
+(defun name-state (state)
+  (car (contents state)))
+
+(defun objs-state (state)
+  (let ((objs (cdr (contents state)))
+	(len (length (cdr (contents state)))))
+    
+    (if (= len 1)
+      (car objs) ; remove extra '(' ')'
+      objs)))
+
+;; ----------------------------------------------------------------
+
+;; ACTION
+
+;; constructor
+
+(defun make-action (preconditions effects)
   (attach-type 'precondition
 	       `(,(conj preconditions) ,(conj effects)))
  )
 
-;;Get preconditions
-(defun get-preconditions (action)
+;; selectors
+
+;Get preconditions
+
+(defun get-pres (action)
   (cdr (nth 1 action))
   )
 
-;;Get effects
-(defun get-effects (action)
+;Get effects
+
+(defun get-effs (action)
   (cdr (nth 2 action))
  )
+
+
