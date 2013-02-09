@@ -137,10 +137,3 @@
 (defun get-effects (action)
   (cdr (nth 2 action))
  )
-
-(setq lit1 (make-lit 'limpio T))
-(setq lit2 (make-lit 'sucio T))
-(setq lista (list lit1 lit2))
-
-(setq efectos (list (not-obj lit1) lit2))
-(action2 lista efectos)
