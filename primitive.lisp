@@ -137,3 +137,13 @@
 (defun get-effects (action)
   (cdr (nth 2 action))
  )
+ 
+ ;; definition of State
+ (defun state (name objs)
+   (attach-type 'state `(,name ,(conj objs)))
+   )
+
+;; Get literales
+(defun get-literales (state)
+  (cdr (nth 2 state))
+  )
