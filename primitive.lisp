@@ -293,7 +293,30 @@
     )
   )
 
+(defun inconsistency-in-pres? (action1 action2)
+  (cond
+    ((pres-has-inconsistency (pres action1) (pres action2)) T)
+    ((pres-has-inconsistency (pres action2) (pres action1)) T)
+    (T nil)
+    )
+)
 
+(defun pres-has-inconsistency (pres1 pres2)
+   (let ((nxt-pres (car pres1)))
+     (cond
+       ((or (equal pres2 '())
+	    (equal pres1 '()));(eq nxt-eff nil)
+	nil)
+       
+       ((find (not-obj nxt-pres) 
+	      pres2
+	      :test #'equal)
+	T)
+       
+       ;otherwise
+       (T (pres-has-inconsistency (cdr pres1)
+			    pres2))))
+     )
 ;;; ------------------------------------------------------------
 ;;; ------------------------------------------------------------
 
@@ -301,4 +324,4 @@
 
 
 ; uncomment next line to load the 'tests' file
-; (load "tests.lisp")
+;(load "tests.lisp")
