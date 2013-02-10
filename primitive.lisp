@@ -28,8 +28,10 @@
 ;	
 ;
 (defun eq-type? (obj1 obj2 nametype)
-  (and (equal (typ obj1) (typ obj2)) (equal (typ obj1) nametype) (equal (typ obj2) nametype))
-  )
+  (and
+    (equal (typ obj1) (typ obj2))
+    (equal (typ obj1) nametype)
+    (equal (typ obj2) nametype)))
 
 
 ;; -----------------------------------------------
@@ -49,7 +51,7 @@
 ;	(make-lit 'A nil)
 
 (defun make-lit (name val)
-  (attach-type 'literal 
+  (attach-type 'literal
 	       (cons name val)))
 
 ;; selectors
@@ -57,7 +59,7 @@
 ; name-lit .
 ;	returns the name of a given literal
 
-(defun name-lit (l) 
+(defun name-lit (l)
   (car (contents l)))
 
 ; val-lit .
@@ -122,7 +124,7 @@
 (defun nth-conj (conj n)
   (if (= n 0) 
     (nth n conj)
-    (car 
+    (car
       (nth n conj))))
 
 ;; -------------------------------------------------------
@@ -130,7 +132,7 @@
 ;; NOT (predicates and literals)
 
 (defun not-obj (obj)
-  (cond 
+  (cond
     ((lit? obj)
      (make-lit (name-lit obj) (not (val-lit obj))))
     ((pred? obj)
@@ -212,7 +214,7 @@
 
 ;; constructor
 
-(defun mutex (obj1 obj2)  
+(defun mutex (obj1 obj2)
   (attach-type 'mutex
 	       (cons obj1 obj2)))
 
@@ -222,10 +224,17 @@
 ;; literals and predicates.
 
 (defun opposite? (obj1 obj2)
-  (cond 
-    ((eq-type? obj1 obj2 'literal)(and (not (eq (val-lit obj1) (val-lit obj2))) (equal (name-lit obj1) (name-lit obj2))))
+  (cond
+    ((eq-type? obj1 obj2 'literal)
+     (and
+       (not (eq (val-lit obj1) (val-lit obj2))) ; different values
+       (equal (name-lit obj1) (name-lit obj2)))) ; same names
 
-    ((eq-type? obj1 obj2 'predicate) (and (not (eq (val-pred obj1) (val-pred obj2))) (equal (name-pred obj1) (name-pred obj2))))    
+    ((eq-type? obj1 obj2 'predicate)
+     (and
+       (not (eq (val-pred obj1) (val-pred obj2)))  
+       (equal (name-pred obj1) (name-pred obj2))))  
+    
     (T (error "Wrong type of arguments."))))
 
 ;; actions.
@@ -234,21 +243,40 @@
 
 (defun interference? (action1 action2)
   (cond 
-    ((has-interference (effs action1) (pres action2)) T)
-    ((has-interference (effs action2) (pres action1)) T)
+    ((has-interference (effs action1)
+		       (pres action2))
+     T)
+    
+    ((has-interference (effs action2)
+		       (pres action1))
+     T)
     (T nil)
     )
   )
 
-(defun has-interference (effects preconditions)
-  (cond
-    ((or (equal 0 (length effects))(equal 0 (length preconditions)) (equal nil (car effects)) (equal nil (car preconditions))) nil)
-    ((equal (car effects) (not-obj (car preconditions))) T)
-    (T (has-interference (cdr effects) (cdr preconditions)))
-    )
-  )
+
+(defun has-interference (effs pres)
+
+  (let ((nxt-eff (car effs)))
+    (cond
+      ((or (eq effs '())
+	   (eq pres '()));(eq nxt-eff nil)
+       nil)
+      
+      ((find (not-obj nxt-eff) 
+	     pres
+	     :test #'equal)
+       T)
+      
+      ;otherwise
+      (T (has-interference (cdr effs)
+			   pres)))))
+
+
+
 
 ;; Inconsistency
+
 (defun inconsistency? (action1 action2)
   (cond
     ((has-inconsistency (effs action1) (effs action2)) T)
@@ -264,3 +292,13 @@
     (T (has-inconsistency effects1 (cdr effects2)))
     )
   )
+
+
+;;; ------------------------------------------------------------
+;;; ------------------------------------------------------------
+
+;;;			T E S T
+
+
+; uncomment next line to load the 'tests' file
+; (load "tests.lisp")
