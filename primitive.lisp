@@ -22,13 +22,14 @@
 ;;;	FIRST ABSTRACTION LAYER
 
 
-;; -LITERAL-
+;; LITERAL
 
 ;; constructor
 
-; make-lit
+; make-lit .
 ;	creates a literal for a given name ('A, 'B, 'ManosLimpias, ...)
 ;	and a given logical value (t or nil)
+
 ; example:
 ;	(make-lit 'A nil)
 
@@ -38,23 +39,25 @@
 
 ;; selectors
 
-; name-lit
+; name-lit .
 ;	returns the name of a given literal
 
 (defun name-lit (l) 
   (car (contents l)))
 
-; val-lit
+; val-lit .
 ;	returns the value of a given literal
+
 (defun val-lit (l)
   (cdr (contents l)))
 
 ;; functions over literals
 
-;lit?
+; lit? .
 ;	checks if the object is a literal.
-(defun lit? (object)
-  (equal (typ object)
+
+(defun lit? (obj)
+  (equal (typ obj)
 	 'literal))
 
 ;; -------------------------------------------------------
@@ -81,8 +84,8 @@
 
 ;; functions over predicates
 
-(defun pred? (p)
-  (equal (typ p)
+(defun pred? (obj)
+  (equal (typ obj)
 	 'predicate))
 
 ;; -------------------------------------------------------
@@ -98,7 +101,7 @@
 
 ;; functions over conjunctions
 
-; nth-conj
+; nth-conj .
 ;	returns the 'nth' element of a given conjunction.
 
 (defun nth-conj (conj n)
@@ -112,22 +115,19 @@
 ;; NOT (predicates and literals)
 
 (defun not-obj (obj)
-  (cond
-    ((lit? obj) (make-lit (name-lit obj) (not (val-lit obj))))
-    ((pred? obj)(make-pred (name-pred obj) (objs-pred obj) (not (val-pred obj))))
-    )
-  )
+  (cond 
+    ((lit? obj)
+     (make-lit (name-lit obj) (not (val-lit obj))))
+    ((pred? obj)
+     (make-pred (name-pred obj) (objs-pred obj) (not (val-pred obj))))))
 
 ;; -----------------------------------------------
 ;; -----------------------------------------------
 ;;;	SECOND ABSTRACTION LAYER
 
-;; TODO: define state, action
-
 ;; STATE
 
-;; constructor
-
+;; constructor .
 ;	returns a 'state' for a given list of conjunctions.
 
 (defun make-state (name conj)
@@ -148,28 +148,45 @@
       (car objs) ; remove extra '(' ')'
       objs)))
 
+;; functions over states
+
+(defun state? (obj)
+  (equal (typ obj)
+	 'state))
+
 ;; ----------------------------------------------------------------
 
 ;; ACTION
 
 ;; constructor
 
-(defun make-action (preconditions effects)
+(defun make-action (name preconditions effects)
   (attach-type 'action
-	       `(,(conj preconditions) ,(conj effects)))
- )
+	       `(,name ,(conj preconditions) ,(conj effects))))
 
 ;; selectors
 
 ; Get preconditions
 
 (defun pres (action)
-  (cdr (nth 1 action))
-  )
+  (cdr (nth 1 action)))
 
 ; Get effects
 
 (defun effs (action)
-  (cdr (nth 2 action))
- )
+  (cdr (nth 2 action)))
+
+;; functions over actions
+
+(defun action? (obj)
+  (equal (typ obj)
+	 'action))
+
+; persistence? . 
+;	checks if the given action is a 'persistence action'
+
+(defun persistence? (a)
+  (equal (pres a)
+	 (effs a)))
+
 
