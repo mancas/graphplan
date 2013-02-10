@@ -28,9 +28,8 @@
 ;	
 ;
 (defun eq-type? (obj1 obj2 nametype)
-  (equal (typ obj1)
-	 (typ obj2)
-	 nametype))
+  (and (equal (typ obj1) (typ obj2)) (equal (typ obj1) nametype) (equal (typ obj2) nametype))
+  )
 
 
 ;; -----------------------------------------------
@@ -185,12 +184,12 @@
 ; Get preconditions
 
 (defun pres (action)
-  (cdr (nth 1 action)))
+  (cdr (nth 2 action)))
 
 ; Get effects
 
 (defun effs (action)
-  (cdr (nth 2 action)))
+  (cdr (nth 3 action)))
 
 ;; functions over actions
 
@@ -224,18 +223,44 @@
 
 (defun opposite? (obj1 obj2)
   (cond 
-    ((eq-type? obj1 obj2 'literal) 
-     (not
-       (eq (val-lit obj1) (val-lit obj2))))
+    ((eq-type? obj1 obj2 'literal)(and (not (eq (val-lit obj1) (val-lit obj2))) (equal (name-lit obj1) (name-lit obj2))))
 
-    ((eq-type? obj1 obj2 'predicate) 
-     (not
-       (eq (val-pred obj1) (val-pred obj2))))
-    
-    (error "Wrong type of arguments.")))
+    ((eq-type? obj1 obj2 'predicate) (and (not (eq (val-pred obj1) (val-pred obj2))) (equal (name-pred obj1) (name-pred obj2))))    
+    (T (error "Wrong type of arguments."))))
 
 ;; actions.
 
+;; Interference conflict
 
+(defun interference? (action1 action2)
+  (cond 
+    ((has-interference (effs action1) (pres action2)) T)
+    ((has-interference (effs action2) (pres action1)) T)
+    (T nil)
+    )
+  )
 
+(defun has-interference (effects preconditions)
+  (cond
+    ((or (equal 0 (length effects))(equal 0 (length preconditions)) (equal nil (car effects)) (equal nil (car preconditions))) nil)
+    ((equal (car effects) (not-obj (car preconditions))) T)
+    (T (has-interference (cdr effects) (cdr preconditions)))
+    )
+  )
 
+;; Inconsistency
+(defun inconsistency? (action1 action2)
+  (cond
+    ((has-inconsistency (effs action1) (effs action2)) T)
+    ((has-inconsistency (effs action2) (effs action1)) T)
+    (T nil)
+    )
+  )
+
+(defun has-inconsistency (effects1 effects2)
+  (cond
+    ((or (equal 0 (length effects1))(equal 0 (length effects2)) (equal nil (car effects1)) (equal nil (car effects2))) nil);;Si alguna lista de efectos es vacia o contiene nil entonces no hay incosistencia
+    ((opposite? (car effects1) (car effects2)) T)
+    (T (has-inconsistency effects1 (cdr effects2)))
+    )
+  )
