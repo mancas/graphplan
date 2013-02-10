@@ -17,6 +17,22 @@
 (defun contents (object)
   (cdr object))
 
+
+;; functions over objects
+
+; eq-type? .
+;	checks if the 2 objs given have the same type, and the type is
+;	equal to 'nametype'.
+; 
+; example: (eq-type? o1 o2 'literal)
+;	
+;
+(defun eq-type? (obj1 obj2 nametype)
+  (equal (typ obj1)
+	 (typ obj2)
+	 nametype))
+
+
 ;; -----------------------------------------------
 ;; -----------------------------------------------
 ;;;	FIRST ABSTRACTION LAYER
@@ -188,5 +204,38 @@
 (defun persistence? (a)
   (equal (pres a)
 	 (effs a)))
+
+;; ----------------------------------------------------------------
+
+;; MUTEX
+;;	represents the conflict between 2 literals/actions.
+
+
+;; constructor
+
+(defun mutex (obj1 obj2)  
+  (attach-type 'mutex
+	       (cons obj1 obj2)))
+
+
+;; Functions to check conflicts
+
+;; literals and predicates.
+
+(defun opposite? (obj1 obj2)
+  (cond 
+    ((eq-type? obj1 obj2 'literal) 
+     (not
+       (eq (val-lit obj1) (val-lit obj2))))
+
+    ((eq-type? obj1 obj2 'predicate) 
+     (not
+       (eq (val-pred obj1) (val-pred obj2))))
+    
+    (error "Wrong type of arguments.")))
+
+;; actions.
+
+
 
 
