@@ -250,9 +250,7 @@
     ((has-interference (effs action2)
 		       (pres action1))
      T)
-    (T nil)
-    )
-  )
+    (T nil)))
 
 
 (defun has-interference (effs pres)
@@ -260,63 +258,76 @@
   (let ((nxt-eff (car effs)))
     (cond
       ((or (eq effs '())
-	   (eq pres '()));(eq nxt-eff nil)
+	   (eq pres '()))
        nil)
       
       ((find (not-obj nxt-eff) 
 	     pres
 	     :test #'equal)
        T)
-      
       ;otherwise
       (T (has-interference (cdr effs)
 			   pres)))))
 
 
+;; Inconsistency conflict
 
-
-;; Inconsistency
-
-(defun inconsistency? (action1 action2)
+(defun inconsistent-effs? (action1 action2)
   (cond
-    ((has-inconsistency (effs action1) (effs action2)) T)
-    ((has-inconsistency (effs action2) (effs action1)) T)
-    (T nil)
-    )
-  )
+    ((inconsistency-effs (effs action1)
+			 (effs action2)) 
+     T)
+    ((inconsistency-effs (effs action2)
+			 (effs action1)) 
+     T)
+    
+    (T nil)))
 
-(defun has-inconsistency (effects1 effects2)
-  (cond
-    ((or (equal 0 (length effects1))(equal 0 (length effects2)) (equal nil (car effects1)) (equal nil (car effects2))) nil);;Si alguna lista de efectos es vacia o contiene nil entonces no hay incosistencia
-    ((opposite? (car effects1) (car effects2)) T)
-    (T (has-inconsistency effects1 (cdr effects2)))
-    )
-  )
 
-(defun inconsistency-in-pres? (action1 action2)
-  (cond
-    ((pres-has-inconsistency (pres action1) (pres action2)) T)
-    ((pres-has-inconsistency (pres action2) (pres action1)) T)
-    (T nil)
-    )
-)
-
-(defun pres-has-inconsistency (pres1 pres2)
-   (let ((nxt-pres (car pres1)))
+(defun inconsistency-effs (effs1 effs2)
+   (let ((nxt-eff (car effs1)))
      (cond
-       ((or (equal pres2 '())
-	    (equal pres1 '()));(eq nxt-eff nil)
+       ((or (equal effs1 '())
+	    (equal effs2 '()))
 	nil)
        
-       ((find (not-obj nxt-pres) 
+       ((find (not-obj nxt-eff) 
+	      effs2
+	      :test #'equal)
+	T)
+       ;otherwise
+       (T (inconsistency-pres (cdr effs1)
+			      effs2)))))
+
+
+;; Competing needs conflict
+
+(defun inconsistent-pres? (action1 action2)
+  (cond
+    ((inconsistency-pres (pres action1)
+			 (pres action2)) 
+     T)
+    ((inconsistency-pres (pres action2)
+			 (pres action1))
+     T)
+    (T nil)))
+
+
+(defun inconsistency-pres (pres1 pres2)
+   (let ((nxt-pre (car pres1)))
+     (cond
+       ((or (equal pres1 '())
+	    (equal pres2 '()))
+	nil)
+       
+       ((find (not-obj nxt-pre) 
 	      pres2
 	      :test #'equal)
 	T)
-       
        ;otherwise
-       (T (pres-has-inconsistency (cdr pres1)
-			    pres2))))
-     )
+       (T (inconsistency-pres (cdr pres1)
+			      pres2)))))
+
 ;;; ------------------------------------------------------------
 ;;; ------------------------------------------------------------
 
