@@ -272,12 +272,9 @@
 ;; Inconsistency conflict
 
 (defun inconsistent-effs? (action1 action2)
-  (if
+  
     (inconsistency-effs (effs action1)
-			(effs action2)) 
-    T
-    ; otherwise
-    nil))
+			(effs action2)))
 
 
 (defun inconsistency-effs (effs1 effs2)
@@ -298,11 +295,9 @@
 ;; Competing needs conflict
 
 (defun inconsistent-pres? (action1 action2)
-  (if (inconsistency-pres (pres action1)
-			  (pres action2)) 
-       T
-       ; otherwise
-       nil))
+   
+  (inconsistency-pres (pres action1)
+		      (pres action2)))
 
 
 (defun inconsistency-pres (pres1 pres2)
@@ -327,4 +322,4 @@
 
 
 ; uncomment next line to load the 'tests' file
-;(load "tests.lisp")
+(load "tests.lisp")
