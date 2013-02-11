@@ -269,19 +269,15 @@
       (T (has-interference (cdr effs)
 			   pres)))))
 
-
 ;; Inconsistency conflict
 
 (defun inconsistent-effs? (action1 action2)
-  (cond
-    ((inconsistency-effs (effs action1)
-			 (effs action2)) 
-     T)
-    ((inconsistency-effs (effs action2)
-			 (effs action1)) 
-     T)
-    
-    (T nil)))
+  (if
+    (inconsistency-effs (effs action1)
+			(effs action2)) 
+    T
+    ; otherwise
+    nil))
 
 
 (defun inconsistency-effs (effs1 effs2)
@@ -299,18 +295,14 @@
        (T (inconsistency-pres (cdr effs1)
 			      effs2)))))
 
-
 ;; Competing needs conflict
 
 (defun inconsistent-pres? (action1 action2)
-  (cond
-    ((inconsistency-pres (pres action1)
-			 (pres action2)) 
-     T)
-    ((inconsistency-pres (pres action2)
-			 (pres action1))
-     T)
-    (T nil)))
+  (if (inconsistency-pres (pres action1)
+			  (pres action2)) 
+       T
+       ; otherwise
+       nil))
 
 
 (defun inconsistency-pres (pres1 pres2)
