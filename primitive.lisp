@@ -134,9 +134,12 @@
 (defun not-obj (obj)
   (cond
     ((lit? obj)
-     (make-lit (name-lit obj) (not (val-lit obj))))
+     (make-lit (name-lit obj) 
+	       (not (val-lit obj))))
     ((pred? obj)
-     (make-pred (name-pred obj) (objs-pred obj) (not (val-pred obj))))))
+     (make-pred (name-pred obj) 
+		(objs-pred obj) 
+		(not (val-pred obj))))))
 
 ;; -----------------------------------------------
 ;; -----------------------------------------------
@@ -159,8 +162,8 @@
 
 (defun objs-state (state)
   (let ((objs (cdr (contents state)))
-	(len (length (cdr (contents state)))))
-    
+	(len (length 
+	       (cdr (contents state)))))
     (if (= len 1)
       (car objs) ; remove extra '(' ')'
       objs)))
@@ -227,13 +230,17 @@
   (cond
     ((eq-type? obj1 obj2 'literal)
      (and
-       (not (eq (val-lit obj1) (val-lit obj2))) ; different values
-       (equal (name-lit obj1) (name-lit obj2)))) ; same names
+       (not (eq (val-lit obj1) ; different values
+		(val-lit obj2)))
+       (equal (name-lit obj1) ; same names
+	      (name-lit obj2))))
 
     ((eq-type? obj1 obj2 'predicate)
      (and
-       (not (eq (val-pred obj1) (val-pred obj2)))  
-       (equal (name-pred obj1) (name-pred obj2))))  
+       (not (eq (val-pred obj1)
+		(val-pred obj2))) 
+       (equal (name-pred obj1)
+	      (name-pred obj2))))
     
     (T (error "Wrong type of arguments."))))
 
@@ -289,7 +296,7 @@
 	      :test #'equal)
 	T)
        ;otherwise
-       (T (inconsistency-pres (cdr effs1)
+       (T (inconsistency-effs (cdr effs1)
 			      effs2)))))
 
 ;; Competing needs conflict
@@ -322,4 +329,4 @@
 
 
 ; uncomment next line to load the 'tests' file
-(load "tests.lisp")
+;(load "tests.lisp")
