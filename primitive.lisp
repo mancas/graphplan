@@ -189,13 +189,12 @@
 ; Get preconditions
 
 (defun pres (action)
-  (cdr (nth 2 action)))
+  (contents (nth 2 action)))
 
 ; Get effects
 
 (defun effs (action)
-  (cdr (nth 3 action)))
-
+  (contents (nth 3 action)))
 ;; functions over actions
 
 (defun action? (obj)
@@ -237,11 +236,13 @@
 
     ((eq-type? obj1 obj2 'predicate)
      (and
-       (not (eq (val-pred obj1)
-		(val-pred obj2))) 
-       (equal (name-pred obj1)
-	      (name-pred obj2))))
-    
+       (not (eq (val-pred obj1) ; different values
+		(val-pred obj2)))
+       (equal (name-pred obj1) ; same names
+	      (name-pred obj2))
+       (equal (objs-pred obj1) ; same objects
+	      (objs-pred obj2))))
+
     (T (error "Wrong type of arguments."))))
 
 ;; actions.
@@ -329,4 +330,4 @@
 
 
 ; uncomment next line to load the 'tests' file
-;(load "tests.lisp")
+(load "tests.lisp")
