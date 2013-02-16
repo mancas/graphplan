@@ -1,0 +1,22 @@
+
+			NIVELES DE ABSTRACCION
+
+
+				GRAPH
+		---------------------------------------------
+				LAYER
+		----------------------------------------------
+		STATE,ACTION,MUTEX, +ACTIONSCHEMA, +INSTANTIATE
+		----------------------------------------------
+				NOT,CONJUNTION
+		----------------------------------------------
+			LITERAL,PREDICATE, +VARIABLE,+VOCAB
+
+
+New features needed to implement 'unification'
+
+	Action schema
+	Instantiate
+	Variable
+	Vocabulary
+	(...)
