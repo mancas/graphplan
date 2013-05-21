@@ -107,6 +107,21 @@
 
 ;; -------------------------------------------------------
 
+;; VARIABLE
+
+(defun make-var (name)
+  (attach-type 'variable
+	       `(,name)))
+ 
+(defun name-var (v)
+  (car (contents v)))
+
+(defun var? (obj)
+  (equal (typ obj)
+	 'variable))
+
+;; -------------------------------------------------------
+
 ;; CONJUNCTION
 
 ;; constructor
