@@ -262,81 +262,40 @@
 
 ;; actions.
 
-;; Interference conflict
+(defun conflict? (terms1 terms2)
+   (let ((nxt-term (car terms1)))
+     (cond
+       ((or (equal terms1 '())
+	    (equal terms2 '()))
+	nil)
+       ((find (not-obj nxt-term) 
+	      terms2
+	      :test #'equal)
+	T)
+       ;otherwise
+       (T (conflict? (cdr terms1)
+		     terms2)))))
 
+;; Interference conflict
 (defun interference? (action1 action2)
   (cond 
-    ((has-interference (effs action1)
-		       (pres action2))
+    ((conflict? (effs action1)
+		(pres action2))
      T)
-    
-    ((has-interference (effs action2)
-		       (pres action1))
+    ((conflict? (effs action2)
+		(pres action1))
      T)
     (T nil)))
 
-
-(defun has-interference (effs pres)
-
-  (let ((nxt-eff (car effs)))
-    (cond
-      ((or (eq effs '())
-	   (eq pres '()))
-       nil)
-      
-      ((find (not-obj nxt-eff) 
-	     pres
-	     :test #'equal)
-       T)
-      ;otherwise
-      (T (has-interference (cdr effs)
-			   pres)))))
+;; Competing needs conflict
+(defun inconsistency-pres? (action1 action2)
+  (conflict? (pres action1)
+	     (pres action2)))
 
 ;; Inconsistency conflict
-
-(defun inconsistent-effs? (action1 action2)
-  
-    (inconsistency-effs (effs action1)
-			(effs action2)))
-
-
-(defun inconsistency-effs (effs1 effs2)
-   (let ((nxt-eff (car effs1)))
-     (cond
-       ((or (equal effs1 '())
-	    (equal effs2 '()))
-	nil)
-       
-       ((find (not-obj nxt-eff) 
-	      effs2
-	      :test #'equal)
-	T)
-       ;otherwise
-       (T (inconsistency-effs (cdr effs1)
-			      effs2)))))
-
-;; Competing needs conflict
-
-(defun inconsistent-pres? (action1 action2)
-   
-  (inconsistency-pres (pres action1)
-		      (pres action2)))
-
-
-(defun inconsistency-pres (pres1 pres2)
-   (let ((nxt-pre (car pres1)))
-     (cond
-       ((or (equal pres1 '())
-	    (equal pres2 '()))
-	nil)
-       
-       ((find (not-obj nxt-pre) 
-	      pres2
-	      :test #'equal)
-	T)
-       ;otherwise
-       (T (inconsistency-pres (cdr pres1)
-			      pres2)))))
+(defun inconsistency-effs? (action1 action2)
+  (conflict? (effs action1)
+	     (effs action2)))
 
 ;;; ------------------------------------------------------------
 ;;; ------------------------------------------------------------
