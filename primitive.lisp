@@ -1,118 +1,109 @@
+;;;; FILE: primitive.lisp 
+;;;; AUTHORS: Manuel Casas Barrado, Marcos Díez García
+;;;; DESCRIPTION: Building Planification Graphs
 
-;;; - TYPED DATA MECHANISM -
+;;;; - ABSTRACTION LAYER 0 - 
 
+;;; TYPED DATA MECHANISM.
 ;;; Will allows us to distinguish the basic elements of the 
 ;;; Planification Graph.
-;;;
 ;;; Basic elements: literal, predicate, action ...
 
+;; Constructor. 
+;; Creates an object with a label attached
 (defun attach-type (typ contents)
   (cons typ contents))
 
-;; selectors =)
-
+;; Selectors. 
 (defun typ (object)
   (car object))
 
 (defun contents (object)
   (cdr object))
 
+;; Functions over objects.
 
-;; functions over objects
-
-; eq-type? .
-;	checks if the 2 objs given have the same type, and the type is
-;	equal to 'nametype'.
-; 
-; example: (eq-type? o1 o2 'literal)
-;	
-;
+;; eq-type?
+;; Checks if the 2 objs given have the same type, and the type is
+;; equal to 'nametype'. Example: (eq-type? o1 o2 'literal)
 (defun eq-type? (obj1 obj2 nametype)
-  (and
-    (equal (typ obj1) (typ obj2))
-    (equal (typ obj1) nametype)
+  (and (equal (typ obj1) nametype)
     (equal (typ obj2) nametype)))
 
 
-;; -----------------------------------------------
-;; -----------------------------------------------
-;;;	FIRST ABSTRACTION LAYER
+;;;; - ABSTRACTION LAYER 1 -
 
+;;; LITERAL
 
-;; LITERAL
-
-;; constructor
-
-; make-lit .
-;	creates a literal for a given name ('A, 'B, 'ManosLimpias, ...)
-;	and a given logical value (t or nil)
-
-; example:
-;	(make-lit 'A nil)
-
+;; Constructor.
+;; Creates a literal for a given name ('A, 'B, 'ManosLimpias, ...)
+;; and a given logical value (t or nil)
+;; Example: (make-lit 'A nil)
 (defun make-lit (name val)
   (attach-type 'literal
 	       (cons name val)))
 
-;; selectors
+;; Selectors.
 
-; name-lit .
-;	returns the name of a given literal
-
+;; name-lit
+;; Returns the symbolic name of the literal.
 (defun name-lit (l)
   (car (contents l)))
 
-; val-lit .
-;	returns the value of a given literal
-
+;; val-lit
+;; Returns the logical value of a given literal.
 (defun val-lit (l)
   (cdr (contents l)))
 
-;; functions over literals
+;; Functions over literals.
 
-; lit? .
-;	checks if the object is a literal.
-
+;; lit?
+;; Checks if the object is a literal.
 (defun lit? (obj)
   (equal (typ obj)
 	 'literal))
 
-;; -------------------------------------------------------
+;;; PREDICATE
 
-;; PREDICATE
-
-;; constructor
-
+;; Constructor.
 (defun make-pred (name obj-list val)
   (attach-type 'predicate
 	       (cons `(,name ,obj-list)
 		     val)))
 
-;; selectors
+;; Selectors.
 
+;; name-pred
+;; Returns the symbolic name of a given predicate.
 (defun name-pred (p)
-  (caar (contents p))) ; take first-first
+  (caar (contents p))) 
 
+;; objs-pred
+;; Returns the terms of a given predicate.
 (defun objs-pred (p)
-  (cadar (contents p))) ; take first-last-first
+  (cadar (contents p))) 
 
+;; val-pred
+;; Returns the logical value of a given predicate.
 (defun val-pred (p)
-  (cdr (contents p))) ; take last
+  (cdr (contents p))) 
 
-;; functions over predicates
+;; Functions over predicates
 
+;; pred?
+;; Checks if the object is a predicate.
 (defun pred? (obj)
   (equal (typ obj)
 	 'predicate))
 
-;; -------------------------------------------------------
+;;; VARIABLE
 
-;; VARIABLE
-
+;; Constructor.
 (defun make-var (name)
   (attach-type 'variable
 	       `(,name)))
  
+;; Selectors.
 (defun name-var (v)
   (car (contents v)))
 
@@ -120,31 +111,24 @@
   (equal (typ obj)
 	 'variable))
 
-;; -------------------------------------------------------
+;;; CONJUNCTION
 
-;; CONJUNCTION
-
-;; constructor
-
+;; Constructor.
 (defun conj (obj-list)
   (attach-type 'conjuncion
 	       obj-list))
 
+;; Functions over conjunctions.
 
-;; functions over conjunctions
-
-; nth-conj .
-;	returns the 'nth' element of a given conjunction.
-
+;; nth-conj
+;; Returns the 'nth' element of a given conjunction.
 (defun nth-conj (conj n)
   (if (= n 0) 
     (nth n conj)
     (car
       (nth n conj))))
 
-;; -------------------------------------------------------
-
-;; NOT (predicates and literals)
+;;; NOT (predicates and literals)
 
 (defun not-obj (obj)
   (cond
@@ -156,22 +140,48 @@
 		(objs-pred obj) 
 		(not (val-pred obj))))))
 
-;; -----------------------------------------------
-;; -----------------------------------------------
-;;;	SECOND ABSTRACTION LAYER
+;;; UNIFICATION
+;;; This is a simplified version of unification. We restrict ourselves
+;;; to literals and predicates, we will not consider variables.
 
-;; STATE
+;; Unification for literals.
+;; Two given literals will 'unify' if and only if their names and their
+;; values are the same.
+(defun unify-lit? (l1 l2)
+  (if (eq-type? l1 l2 'literal)
+    (and (equal (val-lit l1)
+		(val-lit l2))
+	 (equal (name-lit l1)
+		(name-lit l2))) 
+    nil)) ; both are not literals
 
-;; constructor .
-;	returns a 'state' for a given list of conjunctions.
+;; Unification for predicates.
+;; Two given predicates will 'unify' if and only if their names, values
+;; and terms are the same.
+;; The order of the terms matters: 'p(A B)' is not the same as 'p(B A)'
+(defun unify-pred? (p1 p2)
+  (if (eq-type? p1 p2 'predicate)
+    (and (equal (val-pred p1)
+		(val-pred p2))
+	 (equal (name-pred p1)
+		(name-pred p2))
+	 (equal (objs-pred p1) ; order matters
+		(objs-pred p2))) 
+    nil)) ; both are not predicates
 
+
+;;;; - ABSTRACTION LAYER 2 -
+
+;;; STATE
+
+;; Constructor.
+;; Returns a 'state' for a given list of conjunctions.
 (defun make-state (name conj)
   (attach-type 'state
 	       (cons name
 		     (contents conj))))
 
-;; selectors
-
+;; Selectors.
 (defun name-state (state)
   (car (contents state)))
 
@@ -183,62 +193,57 @@
       (car objs) ; remove extra '(' ')'
       objs)))
 
-;; functions over states
-
+;; Functions over states
 (defun state? (obj)
   (equal (typ obj)
 	 'state))
 
-;; ----------------------------------------------------------------
+;;; ACTION
 
-;; ACTION
-
-;; constructor
+;; Constructor.
 
 (defun make-action (name preconditions effects)
   (attach-type 'action
 	       `(,name ,(conj preconditions) ,(conj effects))))
 
-;; selectors
+;; Selectors.
 
-; Get preconditions
-
+;; pres
+;; Returns the preconditions of a given action.
 (defun pres (action)
   (contents (nth 2 action)))
 
-; Get effects
-
+;; effs
+;; Returns the effects of a given action.
 (defun effs (action)
   (contents (nth 3 action)))
-;; functions over actions
+
+;; Functions over actions.
 
 (defun action? (obj)
   (equal (typ obj)
 	 'action))
 
-; persistence? . 
-;	checks if the given action is a 'persistence action'
-
+;; persistence? 
+;; Checks if the given action is a 'persistence action'.
 (defun persistence? (a)
   (equal (pres a)
 	 (effs a)))
 
-;; ----------------------------------------------------------------
 
-;; MUTEX
-;;	represents the conflict between 2 literals/actions.
+;;; MUTEX
+;;; Represents the conflict between 2 literals/actions.
 
-
-;; constructor
+;; Constructor.
 
 (defun mutex (obj1 obj2)
   (attach-type 'mutex
 	       (cons obj1 obj2)))
 
 
-;; Functions to check conflicts
+;; Functions to check conflicts.
 
-;; literals and predicates.
+;; Literals and predicates.
 
 (defun opposite? (obj1 obj2)
   (cond
@@ -248,7 +253,6 @@
 		(val-lit obj2)))
        (equal (name-lit obj1) ; same names
 	      (name-lit obj2))))
-
     ((eq-type? obj1 obj2 'predicate)
      (and
        (not (eq (val-pred obj1) ; different values
@@ -257,10 +261,9 @@
 	      (name-pred obj2))
        (equal (objs-pred obj1) ; same objects
 	      (objs-pred obj2))))
-
     (T (error "Wrong type of arguments."))))
 
-;; actions.
+;; Actions.
 
 (defun conflict? (terms1 terms2)
    (let ((nxt-term (car terms1)))
@@ -276,7 +279,8 @@
        (T (conflict? (cdr terms1)
 		     terms2)))))
 
-;; Interference conflict
+;; interference?
+;; Returns 'true' if exists an interference conflict between 2 actions.
 (defun interference? (action1 action2)
   (cond 
     ((conflict? (effs action1)
@@ -297,11 +301,8 @@
   (conflict? (effs action1)
 	     (effs action2)))
 
-;;; ------------------------------------------------------------
-;;; ------------------------------------------------------------
-
-;;;			T E S T
-
+;;;; ------------------------------------------------------------
+;;;;			T E S T
 
 ; uncomment next line to load the 'tests' file
-(load "tests.lisp")
+;(load "tests.lisp")

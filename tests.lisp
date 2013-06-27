@@ -3,7 +3,7 @@
 
 ;; literals
 
-(setq P (make-lit 'P t))
+(setq p (make-lit 'P t))
 (setq notp (make-lit 'P nil))
 (setq q (make-lit 'Q t))
 (setq notq (make-lit 'Q nil))
@@ -13,7 +13,7 @@
 
 (setq pr1 (make-pred 'SOBRE '(A B) t))
 (setq pr2 (make-pred 'SOBRE '(A B) nil))
-(setq pr3 (make-pred 'SOBRE '(B A) nil))
+(setq pr3 (make-pred 'SOBRE '(B A) t))
 
 
 ;; actions
