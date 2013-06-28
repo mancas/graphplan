@@ -231,13 +231,13 @@
 	 (effs a)))
 
 
-;;; MUTEX
+;;; MUTEX & LINK
 ;;; Represents the conflict between 2 literals/actions.
 
 ;; Constructor.
 
-(defun mutex (obj1 obj2)
-  (attach-type 'mutex
+(defun link (obj1 obj2 label)
+  (attach-type label
 	       (cons obj1 obj2)))
 
 
@@ -300,6 +300,28 @@
 (defun inconsistency-effs? (action1 action2)
   (conflict? (effs action1)
 	     (effs action2)))
+
+
+;;;; - ABSTRACTION LAYER 3 -
+
+;;; LAYERS
+
+;; Constructor
+
+(defun make-action-layer (actions mutex)
+  (attach-type 'action-layer
+	       (cons actions mutex)))
+
+(defun make-state-layer (state mutex links)
+  (attach-type 'state-layer
+	       (cons actions mutex links)))
+
+
+;;;; - ABSTRACTION LAYER 4 -
+
+;;;(defun gen-nxt-layer (current-layer previous-layer actions)
+
+;;; )
 
 ;;;; ------------------------------------------------------------
 ;;;;			T E S T
