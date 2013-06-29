@@ -175,7 +175,7 @@
 ;;; STATE
 
 ;; Constructor.
-;; Returns a 'state' for a given list of conjunctions.
+;; Returns a 'state' for a given conjunction.
 (defun make-state (name conj)
   (attach-type 'state
 	       (cons name
@@ -240,6 +240,32 @@
   (attach-type label
 	       (cons obj1 obj2)))
 
+;; Selectors.
+
+;; source
+;; Returns the first object of a given link.
+(defun source (link)
+  (let ((link-typ (typ link)))
+    (if (or (equal link-typ 'link)
+	    (equal link-typ 'mutex))
+      (car (contents link))
+      (error "Argument is not a 'link' nor 'mutex'."))))
+
+;; target
+;; Returns the second object of a given link.
+(defun target (link)
+  (let ((link-typ (typ link)))
+    (if (or (equal link-typ 'link)
+	    (equal link-typ 'mutex))
+      (cdr (contents link))
+      (error "Argument is not a 'link' nor 'mutex'."))))
+
+(defun label (link)
+  (let ((link-typ (typ link)))
+    (if (or (equal link-typ 'link)
+	    (equal link-typ 'mutex))
+      link-typ
+      (error "Argument is not a 'link' nor 'mutex'."))))
 
 ;; Functions to check conflicts.
 
@@ -301,20 +327,45 @@
   (conflict? (effs action1)
 	     (effs action2)))
 
-
 ;;;; - ABSTRACTION LAYER 3 -
 
 ;;; LAYERS
 
-;; Constructor
+;; Constructors.
 
-(defun make-action-layer (actions mutex)
+(defun make-action-layer (actions mutexes links)
   (attach-type 'action-layer
-	       (cons actions mutex)))
+	       (list actions mutexes links)))
 
-(defun make-state-layer (state mutex links)
+(defun make-state-layer (state mutexes links)
   (attach-type 'state-layer
-	       (cons actions mutex links)))
+	       (list state mutexes links)))
+
+;; Functions over layers
+
+(defun action-layer? (layer)
+  (equal (typ layer) 'action-layer))
+
+(defun state-layer? (layer)
+  (equal (typ layer) 'state-layer))
+
+;; Selectors.
+
+(defun actions (layer)
+  (if (action-layer? layer)
+    (car (contents layer))
+    (error "Wrong type of layer.")))
+
+(defun state (layer)
+  (if (state-layer? layer)
+    (car (contents layer))
+    (error "Wrong type of layer.")))
+
+(defun mutexes (layer)
+  (cadr (contents layer)))
+
+(defun links (layer)
+  (caddr (contents layer)))
 
 
 ;;;; - ABSTRACTION LAYER 4 -
@@ -327,4 +378,4 @@
 ;;;;			T E S T
 
 ; uncomment next line to load the 'tests' file
-;(load "tests.lisp")
+(load "tests.lisp")
