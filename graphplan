@@ -4,8 +4,6 @@
 defun make-graph (current layers actions target)
 
 
-
-
 ; (3 elementos minimo para comparar)
 ; cddar layers = previous
 
@@ -18,10 +16,9 @@ defun make-graph (current layers actions target)
 		1.3.3. crear acciones de persistencia para cada objeto de estado
 		1.3.1. crear mutex entre acciones conflictivas
 		1.3.2. crear link entre objetos de estado y acciones aplicables
+
 	1.4 Añadir capa accion a layers
-
 	1.5 Recursion
-
 
 2. Estoy en capa acciones?
 	Crear capa de estado:

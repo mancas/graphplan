@@ -13,8 +13,8 @@
 
 ;; conjunctions
 (setq c1 (conj (list p q)))
-(setq c2 (conj (list p q pr1)))
-(setq c3 (conj (list p q pr2)))
+(setq c2 (conj (list p pr1)))
+(setq c3 (conj (list p pr2 pr3)))
 (setq c4 (conj (list p q pr3)))
 
 ;; states
@@ -32,7 +32,7 @@
 		      (list p)))
 
 (setq a3 (make-action 'A3
-		      (list p q) 
+		      (list p notq) 
 		      ()))
 
 (setq a4 (make-action 'A4 
@@ -44,7 +44,7 @@
 		      ()))
 
 (setq a6 (make-action 'A6
-		      ()
+		      (list pr2 pr3)
 		      (list notp)))
 
 (setq a7 (make-action 'A7
