@@ -214,12 +214,11 @@
 ;; applicable-action? 
 ;; Returns true if all the preconditions are found in the state given.
 ;; Testing by #'equal ensures that names, values and terms are the same.
-
 (defun applicable-action? (state preconds)
   (let ((terms (objs-state state))
 	(pre (car preconds)))
     (cond 
-      ((equal preconds ()) 
+      ((equal preconds ())
        t)
       (T ; otherwise
 	(let ((found (find pre terms :test #'equal))) 
@@ -369,11 +368,29 @@
 
 ;;;; - ABSTRACTION LAYER 4 -
 
+;;; Generators.
+
+;; gen-persistent-actions
+;; Returns the list of persistent actions for a given state.
+;; We will use as the name of each action the name of the term in the
+;; state. Example:
+;;	term -> p
+;;	persistent-action -> name: p, pres: {}, effs: {}
+(defun gen-persistent-actions (terms)
+  (let ((term (car terms))) 
+    (cond 
+      ((equal terms ())
+       ())
+      ((lit? term)
+       (cons (make-action (name-lit term) () ())
+	     (gen-persistent-actions (cdr terms))))
+      ((pred? term)
+       (cons (make-action (name-pred term) () ())
+	     (gen-persistent-actions (cdr terms)))))))
+
 
 ;;;(defun gen-nxt-layer (current-layer previous-layer actions)
-
 ;;; )
-
 
 ;;;; ------------------------------------------------------------
 ;;;;			T E S T
