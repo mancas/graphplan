@@ -28,3 +28,26 @@ defun make-graph (current layers actions target)
 	Añadir capa de estado a layers
 
 	Recursion
+------------------------------------------------------------------
+- REVISION [1-07-13]
+
+make-graph (initial-state target actions layers)
+	layers <- layers UNION {initial-state}
+	
+	if initial-state NOT CONTAINS target
+		action-layer <- generate-action-layer(initial-state ...)
+		new-state <- generate-state-layer(action-layer ...)
+		
+		layers <- layers UNION {action-layer}
+		layers <- layers UNION {new-state}
+		
+		make-graph(new-state target actions layers)
+	return layers
+
+	
+
+
+
+
+
+
