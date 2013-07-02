@@ -155,16 +155,8 @@
 (defun name-state (state)
   (car (contents state)))
 
-;(defun objs-state (state)
-;  (let ((objs (cdr (contents state)))
-;	(len (length 
-;	       (cdr (contents state)))))
-;    (if (= len 1)
-;      (car objs) ; remove extra '(' ')'
-;      objs)))
 (defun objs-state (state)
   (cdr (contents state)))
-
 
 ;; Functions over states
 (defun state? (obj)
@@ -217,17 +209,14 @@
 ;; applicable-action? 
 ;; Returns true if all the preconditions are found in the state given.
 ;; Testing by #'equal ensures that names, values and terms are the same.
-
-;; DEV: state changed by terms
 (defun applicable-action? (terms preconds)
   (let ((pre (car preconds)))
     (cond 
       ((equal preconds ())
        t)
-      (T ; otherwise
-	(let ((found (find pre terms :test #'equal))) 
-	  (and found
-	       (applicable-action? terms (cdr preconds))))))))
+      (T ; otherwise 
+	(and (find pre terms :test #'equal)
+	      (applicable-action? terms (cdr preconds)))))))
 
 ;;; MUTEX & LINK
 ;;; Mutex represents the conflict between 2 literals, predicates or
@@ -390,6 +379,16 @@
        (cons (make-action (name-pred term) () ())
 	     (gen-persistent-actions (cdr terms)))))))
 
+;; gen-new-state
+;; Returns the set of the effects, which constitute the new state,
+;; of the actions given.
+(defun gen-new-state (actions)
+  (let ((action (car actions)))
+    (if (equal actions ())
+      ()
+      (remove-duplicates (append (effs action)
+				 (gen-new-state (cdr actions)))
+			 :test #'equal))))
 
 ;; link-state-to-actions
 ;; Returns the listing of links that connect a term of a state
@@ -397,24 +396,27 @@
 ;; Example of use:
 ;;	(link-state-to-actions (objs-state st5) (list a5) (list a5))
 ;;
-(defun link-state-to-actions (terms unexplored actions-record)
+
+(defun link-state-to-actions (state actions)
+  (link-state-to-actions* (objs-state state) actions actions))
+
+(defun link-state-to-actions* (terms unexplored actions-record)
   (let ((term (car terms))
 	(action (car unexplored)))
     (cond
       ((equal terms ())
        ())
       ((equal unexplored ()) ; all actions explored for term
-       ; explore nxt-term and reset actions
-       (link-state-to-actions (cdr terms) ; next term
-			      actions-record ; reset unexplored
-			      actions-record))
+       (link-state-to-actions* (cdr terms) ; next term
+			       actions-record ; reset unexplored
+			       actions-record))
       ((or (persistence? action)
 	   (not (equal (find term (pres action) :test #'equal)
 		       nil)))
        (cons (link term action 'link)
-	     (link-state-to-actions terms ; keep current term as next
-				    (cdr unexplored) ; next action
-				    actions-record))))))
+	     (link-state-to-actions* terms ; keep current term as next
+				     (cdr unexplored) ; next action
+				     actions-record))))))
 
 ;;;; ------------------------------------------------------------
 ;;;;			T E S T
