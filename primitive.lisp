@@ -419,12 +419,14 @@
 				     actions-record))))))
 
 ;; link-actions-to-state
+;; Returns the listing of links that connect an action with its
+;; correspondant effects in the new state.
 (defun link-actions-to-state (actions new-state)
   (let ((action (car actions)))
-    (if (not (equal actions ()))
+    (if (equal actions ())
+      ()
       (append (link-actions-to-state* action (effs action) new-state)
-	      (link-actions-to-state (cdr actions) new-state))
-      ())))
+	      (link-actions-to-state (cdr actions) new-state)))))
 
 (defun link-actions-to-state* (action effs new-state)
   (let ((eff (car effs)))
@@ -433,41 +435,57 @@
       (let ((found (find eff (objs-state new-state) :test #'equal)))
 	(if (not (equal found nil))
 	  (cons (link action found 'link)
-		  (link-actions-to-state* action (cdr effs) new-state))
+		(link-actions-to-state* action (cdr effs) new-state))
 	  (link-actions-to-state* action (cdr effs) new-state))))))
 
 
-;; gen-actions-pairs
+;; gen-pairs
+;; Returns the list of all the possible object pairs given the set of
+;; objects.
+(defun gen-pairs (objects)
+  (let ((powerset (gen-powerset objects)))
+    (loop for subset in powerset
+	  if (= (length subset) 2)
+	  collect subset)))
 
-(defun gen-actions-pairs (actions)
-  (let ((powerset (gen-powerset-actions actions)))
-
-    (loop for elem in powerset
-	  if (= (length elem) 2)
-	  collect elem)))
-
-;; Look reference
-(defun gen-powerset-actions (actions)
-  (if (null actions)
+;; gen-powerset
+;; Returns the list of all possible subsets of objects.
+(defun gen-powerset (objects)
+  (if (null objects)
     (list nil)
-    (let ((prev (gen-powerset-actions (cdr actions))))
-      (append (mapcar #'(lambda (elt) (cons (car actions) elt)) 
+    (let ((prev (gen-powerset (cdr objects))))
+      (append (mapcar #'(lambda (elt) (cons (car objects) elt)) 
 		      prev)
 	      prev))))
 
 ;; gen-actions-mutexes
-(defun gen-actions-mutexes (pairs)
-  (let ((pair (car pairs)))    
-    (if (equal pairs ())
+;; Returns the list of mutexes given the list of pairs of actions.
+(defun gen-actions-mutexes (actions-pairs)
+  (let ((actions-pair (car actions-pairs)))    
+    (if (equal actions-pairs ())
       ()
-      (let ((action1 (car pair))
-	    (action2 (cadr pair)))
+      (let ((action1 (car actions-pair))
+	    (action2 (cadr actions-pair)))
 	(if (or (interference? action1 action2)
 		(inconsistency-pres? action1 action2)
 		(inconsistency-effs? action1 action2))
 	  (cons (link action1 action2 'mutex)
-		(gen-actions-mutexes (cdr pairs)))
-	  (gen-actions-mutexes (cdr pairs)))))))
+		(gen-actions-mutexes (cdr actions-pairs)))
+	  (gen-actions-mutexes (cdr actions-pairs)))))))
+
+;; gen-opposite-terms-mutexes
+;; Returns the list of mutexes between opposite terms, given the 
+;; list of pairs of terms.
+(defun gen-opposite-terms-mutexes (terms-pairs)
+  (let ((terms-pair (car terms-pairs)))
+    (if (equal terms-pairs ())
+      ()
+      (let ((term1 (car terms-pair))
+	    (term2 (cadr terms-pair)))
+	(if (opposite? term1 term2)
+	  (cons (link term1 term2 'mutex)
+		(gen-opposite-terms-mutexes (cdr terms-pairs)))
+	  (gen-opposite-terms-mutexes (cdr terms-pairs)))))))
 
 
 ;;;; ------------------------------------------------------------
