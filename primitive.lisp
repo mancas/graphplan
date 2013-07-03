@@ -366,17 +366,17 @@
 ;; We will use as the name of each action the name of the term in the
 ;; state. Example:
 ;;	term -> p
-;;	persistent-action -> name: p, pres: {}, effs: {}
+;;	persistent-action -> name: p, pres: {p}, effs: {p}
 (defun gen-persistent-actions (terms)
   (let ((term (car terms))) 
-    (cond 
+    (cond
       ((equal terms ())
        ())
       ((lit? term)
-       (cons (make-action (name-lit term) () ())
+       (cons (make-action (name-lit term) (list term) (list term))
 	     (gen-persistent-actions (cdr terms))))
       ((pred? term)
-       (cons (make-action (name-pred term) () ())
+       (cons (make-action (name-pred term) (list term) (list term))
 	     (gen-persistent-actions (cdr terms)))))))
 
 ;; gen-new-state
@@ -417,6 +417,58 @@
 	     (link-state-to-actions* terms ; keep current term as next
 				     (cdr unexplored) ; next action
 				     actions-record))))))
+
+;; link-actions-to-state
+(defun link-actions-to-state (actions new-state)
+  (let ((action (car actions)))
+    (if (not (equal actions ()))
+      (append (link-actions-to-state* action (effs action) new-state)
+	      (link-actions-to-state (cdr actions) new-state))
+      ())))
+
+(defun link-actions-to-state* (action effs new-state)
+  (let ((eff (car effs)))
+    (if (equal effs ())
+      ()
+      (let ((found (find eff (objs-state new-state) :test #'equal)))
+	(if (not (equal found nil))
+	  (cons (link action found 'link)
+		  (link-actions-to-state* action (cdr effs) new-state))
+	  (link-actions-to-state* action (cdr effs) new-state))))))
+
+
+;; gen-actions-pairs
+
+(defun gen-actions-pairs (actions)
+  (let ((powerset (gen-powerset-actions actions)))
+
+    (loop for elem in powerset
+	  if (= (length elem) 2)
+	  collect elem)))
+
+;; Look reference
+(defun gen-powerset-actions (actions)
+  (if (null actions)
+    (list nil)
+    (let ((prev (gen-powerset-actions (cdr actions))))
+      (append (mapcar #'(lambda (elt) (cons (car actions) elt)) 
+		      prev)
+	      prev))))
+
+;; gen-actions-mutexes
+(defun gen-actions-mutexes (pairs)
+  (let ((pair (car pairs)))    
+    (if (equal pairs ())
+      ()
+      (let ((action1 (car pair))
+	    (action2 (cadr pair)))
+	(if (or (interference? action1 action2)
+		(inconsistency-pres? action1 action2)
+		(inconsistency-effs? action1 action2))
+	  (cons (link action1 action2 'mutex)
+		(gen-actions-mutexes (cdr pairs)))
+	  (gen-actions-mutexes (cdr pairs)))))))
+
 
 ;;;; ------------------------------------------------------------
 ;;;;			T E S T

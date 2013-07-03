@@ -17,6 +17,7 @@
 (setq c3 (conj (list p pr2 pr3)))
 (setq c4 (conj (list p q pr3)))
 (setq c5 (conj (list p)))
+(setq c6 (conj (list notp)))
 
 
 ;; states
@@ -24,6 +25,7 @@
 (setq st2 (make-state 'S2 c2))
 (setq st3 (make-state 'S3 c3))
 (setq st5 (make-state 'S5 c5))
+(setq st6 (make-state 'S6 c6))
 
 ;; actions
 (setq a1 (make-action 'A1

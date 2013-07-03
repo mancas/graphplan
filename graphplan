@@ -31,8 +31,9 @@ defun make-graph (current layers actions target)
 ------------------------------------------------------------------
 - REVISION [1-07-13]
 
+layers: {initial-state}
+
 make-graph (initial-state target actions layers)
-	layers <- layers UNION {initial-state}
 	
 	if initial-state NOT CONTAINS target
 		action-layer <- generate-action-layer(initial-state ...)
@@ -42,6 +43,7 @@ make-graph (initial-state target actions layers)
 		layers <- layers UNION {new-state}
 		
 		make-graph(new-state target actions layers)
+
 	return layers
 
 	
