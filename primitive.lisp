@@ -361,6 +361,8 @@
 
 ;;;; - ABSTRACTION LAYER 4 -
 
+;;; AUXILIAR FUNCTIONS FOR GENERATION OF LAYERS
+
 ;; gen-persistent-actions
 ;; Returns the list of persistent actions for a given state.
 ;; We will use as the name of each action the name of the term in the
@@ -396,7 +398,6 @@
 ;; Example of use:
 ;;	(link-state-to-actions (objs-state st5) (list a5) (list a5))
 ;;
-
 (defun link-state-to-actions (state actions)
   (link-state-to-actions* (objs-state state) actions actions))
 
@@ -438,7 +439,6 @@
 		(link-actions-to-state* action (cdr effs) new-state))
 	  (link-actions-to-state* action (cdr effs) new-state))))))
 
-
 ;; gen-pairs
 ;; Returns the list of all the possible object pairs given the set of
 ;; objects.
@@ -447,7 +447,6 @@
     (loop for subset in powerset
 	  if (= (length subset) 2)
 	  collect subset)))
-
 ;; gen-powerset
 ;; Returns the list of all possible subsets of objects.
 (defun gen-powerset (objects)
@@ -459,7 +458,8 @@
 	      prev))))
 
 ;; gen-actions-mutexes
-;; Returns the list of mutexes given the list of pairs of actions.
+;; Returns the list of mutexes between actions given 
+;; the list of pairs of actions.
 (defun gen-actions-mutexes (actions-pairs)
   (let ((actions-pair (car actions-pairs)))    
     (if (equal actions-pairs ())
@@ -486,6 +486,55 @@
 	  (cons (link term1 term2 'mutex)
 		(gen-opposite-terms-mutexes (cdr terms-pairs)))
 	  (gen-opposite-terms-mutexes (cdr terms-pairs)))))))
+
+;; gen-conflict-terms-mutexes
+;; Returns the list of mutexes between those pairs of terms produced
+;; by conflictive actions.
+(defun gen-conflict-terms-mutexes (actions-mutexes)
+  (let ((actions-mutex (car actions-mutexes)))
+    (if (equal actions-mutexes ())
+      ()
+      (let ((action1 (source actions-mutex))
+	    (action2 (target actions-mutex)))
+	(remov-duplicates
+	  (append (link-all-to-all (gen-pairs (remove-duplicates
+						(append (effs action1)
+							(effs action2))
+						:test #'equal)))
+		  (gen-conflict-terms-mutexes (cdr actions-mutexes))))))))
+
+;; link-all-to-all
+;; When 2 actions have conflict we have to link all the effects of one
+;; action with the effects of the other action. This function returns
+;; a list with all those mutexes for those 2 actions.
+(defun link-all-to-all (effs-pairs)
+  (let ((effs-pair (car effs-pairs)))
+    (if (equal effs-pairs ())
+      ()
+      (let ((eff1 (car effs-pair))
+	    (eff2 (cadr effs-pair)))
+	(cons (link eff1 eff2 'mutex)
+	      (link-all-to-all (cdr effs-pairs)))))))
+
+;; remov-duplicates
+;; Returns the list of mutex without duplicates
+;; Example:
+;;	mutex1: (p, q)|
+;;	mutex2: (q, p)| -----> result of filtering: (p, q)
+;;	mutex3: (p, q)|
+(defun remov-duplicates (unexplored)
+  (let ((mutex (car unexplored)))
+    (if (equal unexplored ())
+      ()
+      (if (or (find mutex 
+		    (cdr unexplored) 
+		    :test #'equal)
+	      (find (link (target mutex) (source mutex) 'mutex)
+		    (cdr unexplored)
+		    :test #'equal))
+	(remov-duplicates (cdr unexplored))
+	(cons mutex
+	      (remov-duplicates (cdr unexplored)))))))
 
 
 ;;;; ------------------------------------------------------------

@@ -42,7 +42,7 @@
 
 (setq a4 (make-action 'A4 
 		      ()
-		      (list p q)))
+		      (list q p)))
 
 (setq a5 (make-action 'A5
 		      (list p)
@@ -58,6 +58,12 @@
 ;; mutexes
 (setq m1 (link a1 a2 'mutex))
 (setq m2 (link a2 a3 'mutex))
+
+(setq m3 (link p q 'mutex))
+(setq m4 (link notq p 'mutex))
+(setq m5 (link q p 'mutex))
+(setq m6 (link p q 'mutex))
+
 
 ;; links
 (setq l1 (link p a1 'link))
