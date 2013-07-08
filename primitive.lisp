@@ -593,7 +593,20 @@
 
 
 ;; make-graph
-;(defun make-graphplan (current-state target-state actions layers))
+(defun make-graphplan (current-layer target-layer actions layers)
+  (if (or (reach-target? (objs-state (state current-layer))
+			 (objs-state (state target-layer)))
+	  (equal current-layer
+		 (caddr layers))) ; previous state-layer
+    layers
+    (let* ((actions-layer (gen-actions-layer (state current-layer)
+					     actions))
+	   (new-state-layer (gen-state-layer actions-layer)))
+      (make-graph new-state-layer 
+		  target-layer
+		  actions
+		  (append new-state-layer actions-layer layers)))))
+
 ;;;; ------------------------------------------------------------
 ;;;;			T E S T
 
