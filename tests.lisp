@@ -79,3 +79,7 @@
 				(list m1 m2)
 				()))
 
+;; test1
+
+(setq layer3  (gen-actions-layer st5
+				 (list a5 a6)))

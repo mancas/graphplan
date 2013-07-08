@@ -31,6 +31,26 @@
     (equal (typ obj2) nametype)))
 
 
+;; gen-pairs
+;; Returns the list of all the possible object pairs given the set of
+;; objects.
+(defun gen-pairs (objects)
+  (let ((powerset (gen-powerset objects)))
+    (loop for subset in powerset
+	  if (= (length subset) 2)
+	  collect subset)))
+
+;; gen-powerset
+;; Returns the list of all possible subsets of objects.
+(defun gen-powerset (objects)
+  (if (null objects)
+    (list nil)
+    (let ((prev (gen-powerset (cdr objects))))
+      (append (mapcar #'(lambda (elt) (cons (car objects) elt)) 
+		      prev)
+	      prev))))
+
+
 ;;;; - ABSTRACTION LAYER 1 -
 
 ;;; LITERAL
@@ -152,15 +172,28 @@
 		     (contents conj))))
 
 ;; Selectors.
+
 (defun name-state (state)
   (car (contents state)))
 
 (defun objs-state (state)
   (cdr (contents state)))
 
-;; Functions over states
+;; Functions over states.
+
 (defun state? (obj)
   (equal (typ obj) 'state))
+
+;; reach-target?
+;; Returns 'true' if the target state is found in the current state,
+;; given the terms of both states.
+(defun reach-target? (current-terms target-terms)
+  (let ((target-term (car target-terms)))
+
+    (if (equal target-terms ())
+      t
+     (and (find target-term current-terms :test #'equal)
+	 (reach-target? current-terms (cdr target-terms))))))
 
 ;;; ACTION
 
@@ -318,6 +351,42 @@
   (conflict? (effs action1)
 	     (effs action2)))
 
+
+;; Auxiliar functions over mutexes.
+
+;; link-all-to-all
+;; When 2 actions have conflict we have to link all the effects of one
+;; action with the effects of the other action. This function returns
+;; a list with all those mutexes for those 2 actions.
+(defun link-all-to-all (effs-pairs)
+  (let ((effs-pair (car effs-pairs)))
+    (if (equal effs-pairs ())
+      ()
+      (let ((eff1 (car effs-pair))
+	    (eff2 (cadr effs-pair)))
+	(cons (link eff1 eff2 'mutex)
+	      (link-all-to-all (cdr effs-pairs)))))))
+
+;; remov-duplicates
+;; Returns the list of mutex without duplicates
+;; Example:
+;;	mutex1: (p, q)|
+;;	mutex2: (q, p)| -----> result of filtering: (p, q)
+;;	mutex3: (p, q)|
+(defun remov-duplicates (unexplored)
+  (let ((mutex (car unexplored)))
+    (if (equal unexplored ())
+      ()
+      (if (or (find mutex 
+		    (cdr unexplored) 
+		    :test #'equal)
+	      (find (link (target mutex) (source mutex) 'mutex)
+		    (cdr unexplored)
+		    :test #'equal))
+	(remov-duplicates (cdr unexplored))
+	(cons mutex
+	      (remov-duplicates (cdr unexplored)))))))
+
 ;;;; - ABSTRACTION LAYER 3 -
 
 ;;; LAYERS
@@ -361,7 +430,7 @@
 
 ;;;; - ABSTRACTION LAYER 4 -
 
-;;; AUXILIAR FUNCTIONS FOR GENERATION OF LAYERS
+;;; FUNCTIONS FOR GENERATION OF LAYERS
 
 ;; gen-persistent-actions
 ;; Returns the list of persistent actions for a given state.
@@ -411,13 +480,16 @@
        (link-state-to-actions* (cdr terms) ; next term
 			       actions-record ; reset unexplored
 			       actions-record))
-      ((or (persistence? action)
-	   (not (equal (find term (pres action) :test #'equal)
-		       nil)))
+      ((not (equal (find term (pres action) :test #'equal)
+		       nil))
        (cons (link term action 'link)
 	     (link-state-to-actions* terms ; keep current term as next
 				     (cdr unexplored) ; next action
-				     actions-record))))))
+				     actions-record)))
+      ; otherwise
+      (T (link-state-to-actions* terms ; keep current term as next
+				 (cdr unexplored) ; next action
+				 actions-record)))))
 
 ;; link-actions-to-state
 ;; Returns the listing of links that connect an action with its
@@ -439,23 +511,6 @@
 		(link-actions-to-state* action (cdr effs) new-state))
 	  (link-actions-to-state* action (cdr effs) new-state))))))
 
-;; gen-pairs
-;; Returns the list of all the possible object pairs given the set of
-;; objects.
-(defun gen-pairs (objects)
-  (let ((powerset (gen-powerset objects)))
-    (loop for subset in powerset
-	  if (= (length subset) 2)
-	  collect subset)))
-;; gen-powerset
-;; Returns the list of all possible subsets of objects.
-(defun gen-powerset (objects)
-  (if (null objects)
-    (list nil)
-    (let ((prev (gen-powerset (cdr objects))))
-      (append (mapcar #'(lambda (elt) (cons (car objects) elt)) 
-		      prev)
-	      prev))))
 
 ;; gen-actions-mutexes
 ;; Returns the list of mutexes between actions given 
@@ -503,40 +558,42 @@
 						:test #'equal)))
 		  (gen-conflict-terms-mutexes (cdr actions-mutexes))))))))
 
-;; link-all-to-all
-;; When 2 actions have conflict we have to link all the effects of one
-;; action with the effects of the other action. This function returns
-;; a list with all those mutexes for those 2 actions.
-(defun link-all-to-all (effs-pairs)
-  (let ((effs-pair (car effs-pairs)))
-    (if (equal effs-pairs ())
-      ()
-      (let ((eff1 (car effs-pair))
-	    (eff2 (cadr effs-pair)))
-	(cons (link eff1 eff2 'mutex)
-	      (link-all-to-all (cdr effs-pairs)))))))
+;;;; - TOP ABSTRACTION LAYER -
 
-;; remov-duplicates
-;; Returns the list of mutex without duplicates
-;; Example:
-;;	mutex1: (p, q)|
-;;	mutex2: (q, p)| -----> result of filtering: (p, q)
-;;	mutex3: (p, q)|
-(defun remov-duplicates (unexplored)
-  (let ((mutex (car unexplored)))
-    (if (equal unexplored ())
-      ()
-      (if (or (find mutex 
-		    (cdr unexplored) 
-		    :test #'equal)
-	      (find (link (target mutex) (source mutex) 'mutex)
-		    (cdr unexplored)
+;; gen-actions-layer
+;; Returns for a given state-layer, the layer of actions available
+;; (though not necessarily applicable) to that state.
+(defun gen-actions-layer (state actions)
+  (let* ((persistents (gen-persistent-actions (objs-state state)))
+	 (mutexes (gen-actions-mutexes 
+		    (gen-pairs (append actions persistents))))
+	 (links (link-state-to-actions state
+				       (append actions persistents))))
+    (make-action-layer (append actions persistents)
+		       mutexes
+		       links)))
+
+;; gen-state-layer
+;; Returns for a given layer of actions, the new state layer produced
+;; by those actions.
+(defun gen-state-layer (actions-layer)
+  (let* ((new-effs (gen-new-state
+		     (actions actions-layer)))
+	 (new-state (make-state 'new (conj new-effs)))
+	 (mutexes (remove-duplicates ; action-conflictive and opposite terms
+		    (append (gen-opposite-terms-mutexes
+			      (gen-pairs (objs-state new-state)))
+			    (gen-conflict-terms-mutexes
+			      (mutexes actions-layer)))
 		    :test #'equal))
-	(remov-duplicates (cdr unexplored))
-	(cons mutex
-	      (remov-duplicates (cdr unexplored)))))))
+	 (links (link-actions-to-state (actions actions-layer)
+				       new-state)))
+    (make-state-layer new-state mutexes links)))
 
 
+
+;; make-graph
+;(defun make-graphplan (current-state target-state actions layers))
 ;;;; ------------------------------------------------------------
 ;;;;			T E S T
 
