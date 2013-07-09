@@ -18,14 +18,15 @@
 (setq c4 (conj (list p q pr3)))
 (setq c5 (conj (list p)))
 (setq c6 (conj (list notp)))
+(setq c7 (conj (list q)))
 
 
 ;; states
-(setq st1 (make-state 'S1 c1))
-(setq st2 (make-state 'S2 c2))
-(setq st3 (make-state 'S3 c3))
-(setq st5 (make-state 'S5 c5))
-(setq st6 (make-state 'S6 c6))
+(setq st1 (make-state :name 'S1 :conj c1))
+(setq st2 (make-state :name 'S2 :conj c2))
+(setq st3 (make-state :name 'S3 :conj c3))
+(setq st5 (make-state :name 'S5 :conj c5))
+(setq st6 (make-state :name 'S6 :conj c6))
 
 ;; actions
 (setq a1 (make-action 'A1
@@ -83,3 +84,25 @@
 
 (setq layer3  (gen-actions-layer st5
 				 (list a5 a6)))
+
+;; scenario 1
+
+(setq initial-state (make-state :name 'initial :conj c5)) ; p
+(setq target-state (make-state :name 'target :conj c7)) ; q
+
+(setq action1 (make-action 'A1
+		      (list p)
+		      (list q)))
+
+(setq action2 (make-action 'A2
+		      ()
+		      (list notp)))
+
+(setq initial-layer (make-state-layer initial-state
+				      ()
+				      ()))
+(setq target-layer (make-state-layer target-state
+				      ()
+				      ()))
+
+

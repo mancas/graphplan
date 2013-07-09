@@ -30,7 +30,6 @@
   (and (equal (typ obj1) nametype)
     (equal (typ obj2) nametype)))
 
-
 ;; gen-pairs
 ;; Returns the list of all the possible object pairs given the set of
 ;; objects.
@@ -49,7 +48,6 @@
       (append (mapcar #'(lambda (elt) (cons (car objects) elt)) 
 		      prev)
 	      prev))))
-
 
 ;;;; - ABSTRACTION LAYER 1 -
 
@@ -166,7 +164,7 @@
 
 ;; Constructor.
 ;; Returns a 'state' for a given conjunction.
-(defun make-state (name conj)
+(defun make-state (&key (name '-) conj)
   (attach-type 'state
 	       (cons name
 		     (contents conj))))
@@ -579,7 +577,7 @@
 (defun gen-state-layer (actions-layer)
   (let* ((new-effs (gen-new-state
 		     (actions actions-layer)))
-	 (new-state (make-state 'new (conj new-effs)))
+	 (new-state (make-state :conj (conj new-effs)))
 	 (mutexes (remove-duplicates ; action-conflictive and opposite terms
 		    (append (gen-opposite-terms-mutexes
 			      (gen-pairs (objs-state new-state)))
@@ -593,16 +591,20 @@
 
 
 ;; make-graph
+;; Returns the layers generated throughout the building of
+;; the planification graph. Given an initial layer as the 'current-layer',
+;; the 'target-layer' containing the target state, the set of actions of
+;; the problem domain and the accumulator 'layers' containing
+;; the initial layer.
 (defun make-graphplan (current-layer target-layer actions layers)
   (if (or (reach-target? (objs-state (state current-layer))
 			 (objs-state (state target-layer)))
 	  (equal current-layer
 		 (caddr layers))) ; previous state-layer
     layers
-    (let* ((actions-layer (gen-actions-layer (state current-layer)
-					     actions))
+    (let* ((actions-layer (gen-actions-layer (state current-layer) actions))
 	   (new-state-layer (gen-state-layer actions-layer)))
-      (make-graph new-state-layer 
+      (make-graphplan new-state-layer
 		  target-layer
 		  actions
 		  (append new-state-layer actions-layer layers)))))
