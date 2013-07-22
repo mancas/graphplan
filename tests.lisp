@@ -57,19 +57,19 @@
 		      (list notq)
 		      ()))
 ;; mutexes
-(setq m1 (link a1 a2 'mutex))
-(setq m2 (link a2 a3 'mutex))
+(setq m1 (make-edge a1 a2 'mutex))
+(setq m2 (make-edge a2 a3 'mutex))
 
-(setq m3 (link p q 'mutex))
-(setq m4 (link notq p 'mutex))
-(setq m5 (link q p 'mutex))
-(setq m6 (link p q 'mutex))
+(setq m3 (make-edge p q 'mutex))
+(setq m4 (make-edge notq p 'mutex))
+(setq m5 (make-edge q p 'mutex))
+(setq m6 (make-edge p q 'mutex))
 
 
 ;; links
-(setq l1 (link p a1 'link))
-(setq l2 (link q a1 'link))
-(setq l3 (link notq a2 'link))
+(setq l1 (make-edge p a1 'link))
+(setq l2 (make-edge q a1 'link))
+(setq l3 (make-edge notq a2 'link))
 
 ;; layers
 (setq layer1 (make-state-layer st1

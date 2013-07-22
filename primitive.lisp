@@ -84,11 +84,10 @@
 ;;; PREDICATE
 
 ;; Constructor.
-(defun make-pred (name obj-list val)
+(defun make-pred (name objects val)
   (attach-type 'predicate
-	       (cons `(,name ,obj-list)
+	       (cons `(,name ,objects)
 		     val)))
-
 ;; Selectors.
 
 ;; name-pred
@@ -132,9 +131,9 @@
 ;;; CONJUNCTION
 
 ;; Constructor.
-(defun conj (obj-list)
+(defun conj (objects)
   (attach-type 'conjuncion
-	       obj-list))
+	       objects))
 
 ;; Functions over conjunctions.
 
@@ -146,7 +145,7 @@
     (car
       (nth n conj))))
 
-;;; NOT (predicates and literals)
+;;; LOGIC NOT (predicates and literals)
 
 (defun not-obj (obj)
   (cond
@@ -187,11 +186,10 @@
 ;; given the terms of both states.
 (defun reach-target? (current-terms target-terms)
   (let ((target-term (car target-terms)))
-
     (if (equal target-terms ())
       t
      (and (find target-term current-terms :test #'equal)
-	 (reach-target? current-terms (cdr target-terms))))))
+	  (reach-target? current-terms (cdr target-terms))))))
 
 ;;; ACTION
 
@@ -258,7 +256,7 @@
 
 ;; Constructor. 
 
-(defun link (obj1 obj2 label)
+(defun make-edge (obj1 obj2 label)
   (attach-type label		; mutex or link
 	       (cons obj1 obj2)))
 
@@ -362,7 +360,7 @@
       ()
       (let ((eff1 (car effs-pair))
 	    (eff2 (cadr effs-pair)))
-	(cons (link eff1 eff2 'mutex)
+	(cons (make-edge eff1 eff2 'mutex)
 	      (link-all-to-all (cdr effs-pairs)))))))
 
 ;; remov-duplicates
@@ -378,7 +376,7 @@
       (if (or (find mutex 
 		    (cdr unexplored) 
 		    :test #'equal)
-	      (find (link (target mutex) (source mutex) 'mutex)
+	      (find (make-edge (target mutex) (source mutex) 'mutex)
 		    (cdr unexplored)
 		    :test #'equal))
 	(remov-duplicates (cdr unexplored))
@@ -428,7 +426,7 @@
 
 ;;;; - ABSTRACTION LAYER 4 -
 
-;;; FUNCTIONS FOR GENERATION OF LAYERS
+;;; AUXILIAR FUNCTIONS FOR GENERATION OF LAYERS
 
 ;; gen-persistent-actions
 ;; Returns the list of persistent actions for a given state.
@@ -448,15 +446,15 @@
        (cons (make-action (name-pred term) (list term) (list term))
 	     (gen-persistent-actions (cdr terms)))))))
 
-;; gen-new-state
+;; gen-new-state-effs
 ;; Returns the set of the effects, which constitute the new state,
 ;; of the actions given.
-(defun gen-new-state (actions)
+(defun gen-new-state-effs (actions)
   (let ((action (car actions)))
     (if (equal actions ())
       ()
       (remove-duplicates (append (effs action)
-				 (gen-new-state (cdr actions)))
+				 (gen-new-state-effs (cdr actions)))
 			 :test #'equal))))
 
 ;; link-state-to-actions
@@ -480,7 +478,7 @@
 			       actions-record))
       ((not (equal (find term (pres action) :test #'equal)
 		       nil))
-       (cons (link term action 'link)
+       (cons (make-edge term action 'link)
 	     (link-state-to-actions* terms ; keep current term as next
 				     (cdr unexplored) ; next action
 				     actions-record)))
@@ -505,7 +503,7 @@
       ()
       (let ((found (find eff (objs-state new-state) :test #'equal)))
 	(if (not (equal found nil))
-	  (cons (link action found 'link)
+	  (cons (make-edge action found 'link)
 		(link-actions-to-state* action (cdr effs) new-state))
 	  (link-actions-to-state* action (cdr effs) new-state))))))
 
@@ -522,7 +520,7 @@
 	(if (or (interference? action1 action2)
 		(inconsistency-pres? action1 action2)
 		(inconsistency-effs? action1 action2))
-	  (cons (link action1 action2 'mutex)
+	  (cons (make-edge action1 action2 'mutex)
 		(gen-actions-mutexes (cdr actions-pairs)))
 	  (gen-actions-mutexes (cdr actions-pairs)))))))
 
@@ -536,7 +534,7 @@
       (let ((term1 (car terms-pair))
 	    (term2 (cadr terms-pair)))
 	(if (opposite? term1 term2)
-	  (cons (link term1 term2 'mutex)
+	  (cons (make-edge term1 term2 'mutex)
 		(gen-opposite-terms-mutexes (cdr terms-pairs)))
 	  (gen-opposite-terms-mutexes (cdr terms-pairs)))))))
 
@@ -575,10 +573,10 @@
 ;; Returns for a given layer of actions, the new state layer produced
 ;; by those actions.
 (defun gen-state-layer (actions-layer)
-  (let* ((new-effs (gen-new-state
+  (let* ((new-effs (gen-new-state-effs
 		     (actions actions-layer)))
 	 (new-state (make-state :conj (conj new-effs)))
-	 (mutexes (remove-duplicates ; action-conflictive and opposite terms
+	 (mutexes (remove-duplicates ; action-conflictive and opposite term
 		    (append (gen-opposite-terms-mutexes
 			      (gen-pairs (objs-state new-state)))
 			    (gen-conflict-terms-mutexes
@@ -605,9 +603,9 @@
     (let* ((actions-layer (gen-actions-layer (state current-layer) actions))
 	   (new-state-layer (gen-state-layer actions-layer)))
       (make-graphplan new-state-layer
-		  target-layer
-		  actions
-		  (append new-state-layer actions-layer layers)))))
+		      target-layer
+		      actions
+		      (append new-state-layer actions-layer layers)))))
 
 ;;;; ------------------------------------------------------------
 ;;;;			T E S T
