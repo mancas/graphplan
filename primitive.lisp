@@ -477,7 +477,7 @@
 			       actions-record ; reset unexplored
 			       actions-record))
       ((not (equal (find term (pres action) :test #'equal)
-		       nil))
+		   nil))
        (cons (make-edge term action 'link)
 	     (link-state-to-actions* terms ; keep current term as next
 				     (cdr unexplored) ; next action
@@ -494,18 +494,18 @@
   (let ((action (car actions)))
     (if (equal actions ())
       ()
-      (append (link-actions-to-state* action (effs action) new-state)
+      (append (link-action-to-state action (effs action) new-state)
 	      (link-actions-to-state (cdr actions) new-state)))))
 
-(defun link-actions-to-state* (action effs new-state)
+(defun link-action-to-state (action effs new-state)
   (let ((eff (car effs)))
     (if (equal effs ())
       ()
-      (let ((found (find eff (objs-state new-state) :test #'equal)))
-	(if (not (equal found nil))
-	  (cons (make-edge action found 'link)
-		(link-actions-to-state* action (cdr effs) new-state))
-	  (link-actions-to-state* action (cdr effs) new-state))))))
+      (let ((term (find eff (objs-state new-state) :test #'equal)))
+	(if (not (equal term nil))
+	  (cons (make-edge action term 'link)
+		(link-action-to-state action (cdr effs) new-state))
+	  (link-action-to-state action (cdr effs) new-state))))))
 
 
 ;; gen-actions-mutexes
@@ -590,10 +590,11 @@
 
 ;; make-graph
 ;; Returns the layers generated throughout the building of
-;; the planification graph. Given an initial layer as the 'current-layer',
-;; the 'target-layer' containing the target state, the set of actions of
-;; the problem domain and the accumulator 'layers' containing
-;; the initial layer.
+;; the planification graph. Given:
+;;	initial layer as the 'current-layer',
+;;	target-layer' containing the target state,
+;;	set of actions of problem domain,
+;;	accumulator of 'layers' containing the initial layer.
 (defun make-graphplan (current-layer target-layer actions layers)
   (if (or (reach-target? (objs-state (state current-layer))
 			 (objs-state (state target-layer)))
